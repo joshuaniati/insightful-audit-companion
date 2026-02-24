@@ -1,89 +1,9 @@
-interface Finding {
-  severity: "high" | "medium" | "low" | "compliant";
-  title: string;
-  regulation: string;
-  description: string;
-  evidence?: string;
-  recommendation?: string;
-}
+import type { AuditResult, AuditFinding } from "@/lib/puter-ai";
 
-interface AuditResult {
-  totalFindings: number;
-  highRisk: number;
-  mediumRisk: number;
-  compliant: number;
-  opinion: "clean" | "qualified" | "adverse";
-  findings: Finding[];
-}
+const ResultsPanel = ({ visible, result }: { visible: boolean; result?: AuditResult | null }) => {
+  if (!visible || !result) return null;
 
-const MOCK_RESULT: AuditResult = {
-  totalFindings: 8,
-  highRisk: 2,
-  mediumRisk: 3,
-  compliant: 3,
-  opinion: "qualified",
-  findings: [
-    {
-      severity: "high",
-      title: "Missing Annual Financial Statements Disclosure",
-      regulation: "PFMA Section 40(1)(b)",
-      description: "The document does not contain required annual financial statement disclosures as mandated by the Public Finance Management Act.",
-      evidence: "No reference to annual financial statements found in uploaded documents.",
-      recommendation: "Prepare and include complete AFS in compliance with PFMA Section 40 requirements.",
-    },
-    {
-      severity: "high",
-      title: "Non-Compliant Procurement Process",
-      regulation: "PFMA Section 38(1)(a)(iii)",
-      description: "Supply chain management procedures do not align with prescribed procurement regulations.",
-      recommendation: "Review and update SCM policies to align with National Treasury regulations.",
-    },
-    {
-      severity: "medium",
-      title: "Incomplete Risk Management Framework",
-      regulation: "King IV Principle 11",
-      description: "Risk management governance structures are partially documented but lack key oversight mechanisms.",
-      recommendation: "Establish a dedicated risk committee and document risk appetite framework.",
-    },
-    {
-      severity: "medium",
-      title: "POPIA Consent Records Insufficient",
-      regulation: "POPIA Section 11",
-      description: "Data subject consent records are incomplete or not properly maintained.",
-      recommendation: "Implement a digital consent management system with audit trail capabilities.",
-    },
-    {
-      severity: "medium",
-      title: "OHS Committee Not Properly Constituted",
-      regulation: "OHS Act Section 19",
-      description: "Health and safety committee does not meet minimum composition requirements.",
-      recommendation: "Reconstitute the OHS committee with appropriate representation from management and workers.",
-    },
-    {
-      severity: "compliant",
-      title: "B-BBEE Certificate Valid and Current",
-      regulation: "B-BBEE Act Section 10",
-      description: "Valid B-BBEE certificate on file with appropriate verification agency endorsement.",
-    },
-    {
-      severity: "compliant",
-      title: "Employment Equity Plan Filed",
-      regulation: "EEA Section 20",
-      description: "Employment equity plan has been filed with the Department of Labour within prescribed timelines.",
-    },
-    {
-      severity: "compliant",
-      title: "Environmental Impact Assessment Approved",
-      regulation: "NEMA Section 24",
-      description: "All required environmental impact assessments have been conducted and approved.",
-    },
-  ],
-};
-
-const ResultsPanel = ({ visible }: { visible: boolean }) => {
-  if (!visible) return null;
-
-  const r = MOCK_RESULT;
+  const r = result;
 
   const opinionConfig = {
     clean: { bg: "bg-success/10 border-success/30", icon: "✅", title: "Clean Audit Opinion", sub: "No material findings identified." },
@@ -138,7 +58,7 @@ const ResultsPanel = ({ visible }: { visible: boolean }) => {
       </div>
 
       {/* Findings */}
-      {(Object.entries(severityGroups) as [string, Finding[]][]).map(([sev, items]) =>
+      {(Object.entries(severityGroups) as [string, AuditFinding[]][]).map(([sev, items]) =>
         items.length > 0 ? (
           <div key={sev} className="mb-4">
             <div className={`font-heading text-xs font-bold tracking-widest uppercase px-3.5 py-2 rounded-t-lg flex items-center gap-2 ${sectionTitleClass[sev as keyof typeof sectionTitleClass]}`}>
