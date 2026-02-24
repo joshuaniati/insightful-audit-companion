@@ -411,6 +411,8 @@
             font-family: monospace;
             font-size: 0.9em;
             white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
         }
 
         .debug-title {
@@ -449,13 +451,13 @@
                 <div class="upload-section">
                     <div class="upload-box">
                         <h3>📜 Regulation Files</h3>
-                        <input type="file" id="regulationFiles" multiple accept=".pdf,.txt,.md,.csv,.docx,.doc,.rtf" />
+                        <input type="file" id="regulationFiles" multiple accept=".pdf,.txt,.md,.csv,.docx,.doc,.rtf,.xml,.json" />
                         <div id="regulationFileList" class="file-list">No files selected</div>
                     </div>
                     
                     <div class="upload-box">
                         <h3>📄 Documents to Audit</h3>
-                        <input type="file" id="documentFiles" multiple accept=".pdf,.txt,.md,.csv,.docx,.doc,.xlsx,.xls,.pptx" />
+                        <input type="file" id="documentFiles" multiple accept=".pdf,.txt,.md,.csv,.docx,.doc,.xlsx,.xls,.pptx,.rtf,.jpg,.jpeg,.png" />
                         <div id="documentFileList" class="file-list">No files selected</div>
                     </div>
                 </div>
@@ -507,12 +509,16 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
     <script>
+        // ==================== DOCUMENT ANALYSIS CODE ====================
+        
         // Debug logging
         const debug = {
             log: function(msg) {
                 const content = document.getElementById('debugContent');
                 if (content) {
                     content.innerHTML += `\n> ${msg}`;
+                    // Scroll to bottom
+                    content.scrollTop = content.scrollHeight;
                 }
                 console.log(msg);
             },
@@ -576,9 +582,310 @@
                 document.getElementById('statusMessage').textContent = 'All libraries loaded successfully!';
                 debug.log('✅ All libraries loaded - Application ready');
             } else {
-                setTimeout(checkLibraries, 500); // Check again in 500ms
+                setTimeout(checkLibraries, 500);
             }
         }
+
+        // ==================== FILE EXTRACTION FUNCTIONS ====================
+
+        async function extractTextFromFile(file) {
+            debug.log(`Extracting text from: ${file.name} (${file.type})`);
+            
+            // Text-based files
+            const textTypes = [
+                "text/plain", "text/csv", "text/markdown", "application/json",
+                "text/html", "text/xml", "application/xml"
+            ];
+            
+            const textExtensions = ['.txt', '.md', '.csv', '.json', '.xml', '.html', '.htm', '.log'];
+            const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+            
+            if (textTypes.includes(file.type) || textExtensions.includes(extension)) {
+                try {
+                    const text = await file.text();
+                    debug.log(`✅ Extracted ${text.length} chars from text file`);
+                    return text;
+                } catch (e) {
+                    debug.log(`❌ Text extraction failed: ${e.message}`);
+                    return `[Text file: ${file.name} - extraction failed]`;
+                }
+            }
+            
+            // PDF files
+            if (file.type === "application/pdf" || extension === '.pdf') {
+                try {
+                    return await extractPdfText(file);
+                } catch (e) {
+                    debug.log(`❌ PDF extraction failed: ${e.message}`);
+                    return `[PDF file: ${file.name} - extraction failed]`;
+                }
+            }
+            
+            // DOCX files
+            if (extension === '.docx' || file.type.includes('wordprocessingml')) {
+                try {
+                    return await extractDocxText(file);
+                } catch (e) {
+                    debug.log(`❌ DOCX extraction failed: ${e.message}`);
+                    return `[DOCX file: ${file.name} - extraction failed]`;
+                }
+            }
+            
+            // Excel files
+            if (extension === '.xlsx' || extension === '.xls' || file.type.includes('spreadsheet')) {
+                try {
+                    return await extractExcelText(file);
+                } catch (e) {
+                    debug.log(`❌ Excel extraction failed: ${e.message}`);
+                    return `[Excel file: ${file.name} - extraction failed]`;
+                }
+            }
+            
+            // PowerPoint files
+            if (extension === '.pptx' || file.type.includes('presentation')) {
+                try {
+                    return await extractPptxText(file);
+                } catch (e) {
+                    debug.log(`❌ PowerPoint extraction failed: ${e.message}`);
+                    return `[PowerPoint file: ${file.name} - extraction failed]`;
+                }
+            }
+            
+            return `[File: ${file.name}, Type: ${file.type || 'unknown'}, Size: ${(file.size / 1024).toFixed(1)}KB - unsupported format]`;
+        }
+
+        async function extractPdfText(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            
+            if (!window.pdfjsLib) {
+                return `[PDF file: ${file.name} - PDF.js not loaded]`;
+            }
+            
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const pages = [];
+                const maxPages = Math.min(pdf.numPages, 30);
+                
+                for (let i = 1; i <= maxPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    const text = content.items.map(item => item.str).join(" ");
+                    if (text.trim()) {
+                        pages.push(`--- Page ${i} ---\n${text}`);
+                    }
+                }
+                
+                if (pages.length > 0) {
+                    debug.log(`✅ Extracted ${pages.length} pages from PDF`);
+                    return pages.join("\n\n");
+                }
+                
+                return `[PDF file: ${file.name} - no extractable text found]`;
+            } catch (error) {
+                debug.log(`❌ PDF.js error: ${error.message}`);
+                return `[PDF file: ${file.name} - extraction error]`;
+            }
+        }
+
+        async function extractDocxText(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            
+            if (!window.JSZip) {
+                return `[DOCX file: ${file.name} - JSZip not loaded]`;
+            }
+            
+            try {
+                const zip = await JSZip.loadAsync(arrayBuffer);
+                const docXml = await zip.file('word/document.xml')?.async('string');
+                
+                if (!docXml) {
+                    return `[DOCX file: ${file.name} - invalid format]`;
+                }
+                
+                // Simple XML tag stripping
+                const text = docXml.replace(/<[^>]*>/g, ' ')
+                                   .replace(/\s+/g, ' ')
+                                   .trim();
+                
+                debug.log(`✅ Extracted ${text.length} chars from DOCX`);
+                return text || `[DOCX file: ${file.name} - no text content]`;
+            } catch (error) {
+                debug.log(`❌ DOCX error: ${error.message}`);
+                return `[DOCX file: ${file.name} - extraction failed]`;
+            }
+        }
+
+        async function extractExcelText(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            
+            if (!window.XLSX) {
+                return `[Excel file: ${file.name} - SheetJS not loaded]`;
+            }
+            
+            try {
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const sheets = [];
+                
+                workbook.SheetNames.forEach(sheetName => {
+                    const sheet = workbook.Sheets[sheetName];
+                    const text = XLSX.utils.sheet_to_txt(sheet);
+                    if (text.trim()) {
+                        sheets.push(`--- Sheet: ${sheetName} ---\n${text}`);
+                    }
+                });
+                
+                debug.log(`✅ Extracted ${sheets.length} sheets from Excel`);
+                return sheets.length > 0 ? sheets.join('\n\n') : `[Excel file: ${file.name} - no data]`;
+            } catch (error) {
+                debug.log(`❌ Excel error: ${error.message}`);
+                return `[Excel file: ${file.name} - extraction failed]`;
+            }
+        }
+
+        async function extractPptxText(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            
+            if (!window.JSZip) {
+                return `[PPTX file: ${file.name} - JSZip not loaded]`;
+            }
+            
+            try {
+                const zip = await JSZip.loadAsync(arrayBuffer);
+                const slides = [];
+                
+                const slideFiles = Object.keys(zip.files).filter(name => 
+                    name.startsWith('ppt/slides/slide') && name.endsWith('.xml')
+                ).sort();
+                
+                for (const slideFile of slideFiles) {
+                    const slideXml = await zip.file(slideFile)?.async('string');
+                    if (slideXml) {
+                        const text = slideXml.replace(/<[^>]*>/g, ' ')
+                                            .replace(/\s+/g, ' ')
+                                            .trim();
+                        if (text) {
+                            const slideNum = slideFile.match(/\d+/)?.[0] || '';
+                            slides.push(`--- Slide ${slideNum} ---\n${text}`);
+                        }
+                    }
+                }
+                
+                debug.log(`✅ Extracted ${slides.length} slides from PowerPoint`);
+                return slides.length > 0 ? slides.join('\n\n') : `[PPTX file: ${file.name} - no text]`;
+            } catch (error) {
+                debug.log(`❌ PPTX error: ${error.message}`);
+                return `[PPTX file: ${file.name} - extraction failed]`;
+            }
+        }
+
+        // ==================== MAIN ANALYSIS FUNCTION ====================
+
+        async function analyseDocuments(regulationFiles, documentFiles, categories, onProgress) {
+            onProgress("Extracting text from regulation files...", 10);
+            const regTexts = await Promise.all(regulationFiles.map(extractTextFromFile));
+
+            onProgress("Extracting text from audit documents...", 30);
+            const docTexts = await Promise.all(documentFiles.map(extractTextFromFile));
+
+            onProgress("Preparing analysis context...", 50);
+
+            const regContext = regTexts.length > 0
+                ? regTexts
+                    .map((t, i) => `=== Regulation File ${i + 1}: ${regulationFiles[i].name} ===\n${t.slice(0, 8000)}`)
+                    .join("\n\n")
+                : "No regulation files uploaded. Use your knowledge of SA regulations.";
+
+            const docContext = docTexts
+                .map((t, i) => `=== Document ${i + 1}: ${documentFiles[i].name} ===\n${t.slice(0, 12000)}`)
+                .join("\n\n");
+
+            const fileSummary = `
+File Summary:
+- Regulations: ${regulationFiles.map(f => f.name).join(', ') || 'None'}
+- Documents: ${documentFiles.map(f => f.name).join(', ') || 'None'}
+- Total files: ${regulationFiles.length + documentFiles.length}
+`;
+
+            const prompt = `You are an expert South African regulatory compliance auditor. Analyse the following documents against South African regulations.
+
+${fileSummary}
+
+CATEGORIES TO CHECK: ${categories.join(", ")}
+
+REGULATION REFERENCE MATERIAL:
+${regContext}
+
+DOCUMENTS TO AUDIT:
+${docContext}
+
+Provide your analysis as a valid JSON object (no markdown, no code fences) with this exact structure:
+{
+  "totalFindings": <number>,
+  "highRisk": <number of high severity findings>,
+  "mediumRisk": <number of medium severity findings>,  
+  "compliant": <number of compliant areas>,
+  "opinion": "<clean|qualified|adverse>",
+  "findings": [
+    {
+      "severity": "<high|medium|low|compliant>",
+      "title": "<finding title>",
+      "regulation": "<specific regulation section e.g. PFMA Section 40(1)(b)>",
+      "description": "<detailed description of finding>",
+      "evidence": "<evidence from the document or null>",
+      "recommendation": "<recommendation to fix or null>"
+    }
+  ]
+}
+
+Rules:
+- Be thorough but realistic based on the ACTUAL document content
+- Reference specific sections of SA regulations (PFMA, POPIA, OHS Act, BCEA, King IV, NEMA, B-BBEE Act, etc.)
+- Include both non-compliant findings AND compliant areas
+- For compliant areas, set severity to "compliant" and omit recommendation
+- opinion should be "clean" if no high/medium findings, "qualified" if some, "adverse" if many critical issues
+- Return ONLY the JSON object, no other text`;
+
+            try {
+                onProgress("Sending to AI for compliance analysis...", 70);
+                
+                debug.log("Sending prompt to Puter.ai...");
+                const response = await window.puter.ai.chat(prompt, {
+                    model: "claude-sonnet-4",
+                });
+
+                onProgress("Parsing AI results...", 90);
+
+                const text = response.message.content[0].text;
+                debug.log("Received response from AI");
+                
+                // Extract JSON from response
+                let jsonStr = text.trim();
+                const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+                if (fenceMatch) {
+                    jsonStr = fenceMatch[1].trim();
+                }
+                
+                const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    jsonStr = jsonMatch[0];
+                }
+
+                const result = JSON.parse(jsonStr);
+                
+                if (!result.findings || !Array.isArray(result.findings)) {
+                    throw new Error("Invalid response format: missing findings array");
+                }
+                
+                onProgress("Analysis complete!", 100);
+                return result;
+                
+            } catch (error) {
+                debug.log(`❌ AI analysis error: ${error.message}`);
+                throw new Error(`AI analysis failed: ${error.message}`);
+            }
+        }
+
+        // ==================== UI HANDLERS ====================
 
         // Initialize
         window.addEventListener('load', function() {
@@ -593,7 +900,6 @@
         let documentFiles = [];
         let selectedCategories = ['PFMA', 'POPIA', 'OHS Act'];
 
-        // File input handlers
         document.getElementById('regulationFiles').addEventListener('change', function(e) {
             regulationFiles = Array.from(e.target.files);
             updateFileList('regulationFileList', regulationFiles);
@@ -650,17 +956,21 @@
                 return;
             }
 
+            if (!window.puter) {
+                alert('Puter.ai not loaded. Please refresh the page.');
+                return;
+            }
+
             debug.log('Starting audit with:');
             debug.log(`- Documents: ${documentFiles.length}`);
             debug.log(`- Regulations: ${regulationFiles.length}`);
             debug.log(`- Categories: ${selectedCategories.join(', ')}`);
 
-            // Show progress
             document.getElementById('progressSection').classList.remove('hidden');
             document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('startAuditBtn').disabled = true;
 
             try {
-                // Call the analysis function
                 const result = await analyseDocuments(
                     regulationFiles,
                     documentFiles,
@@ -672,7 +982,6 @@
                     }
                 );
 
-                // Display results
                 displayResults(result);
                 debug.log('✅ Audit complete');
 
@@ -680,11 +989,12 @@
                 alert('Error: ' + error.message);
                 debug.log('❌ Error: ' + error.message);
                 console.error(error);
+            } finally {
+                document.getElementById('startAuditBtn').disabled = false;
             }
         });
 
         function displayResults(result) {
-            // Summary cards
             document.getElementById('resultsSummary').innerHTML = `
                 <div class="summary-card total">
                     <div class="summary-number">${result.totalFindings || 0}</div>
@@ -704,12 +1014,10 @@
                 </div>
             `;
 
-            // Opinion badge
             const opinionDiv = document.getElementById('opinionBadge');
             opinionDiv.textContent = `Opinion: ${result.opinion?.toUpperCase() || 'N/A'}`;
             opinionDiv.className = `opinion-badge ${result.opinion || 'clean'}`;
 
-            // Findings list
             if (result.findings && result.findings.length > 0) {
                 document.getElementById('findingsList').innerHTML = result.findings.map(f => `
                     <div class="finding-item ${f.severity}">
@@ -730,9 +1038,6 @@
             document.getElementById('resultsSection').classList.remove('hidden');
             document.getElementById('progressSection').classList.add('hidden');
         }
-
-        // Copy the document analysis code here
-        ${documentAnalysisCode}
     </script>
 </body>
 </html>
