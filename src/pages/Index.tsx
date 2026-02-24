@@ -5,6 +5,8 @@ import FileUploadZone, { type UploadedFile } from "@/components/FileUploadZone";
 import CategorySelector, { CATEGORIES } from "@/components/CategorySelector";
 import AnalyseButton from "@/components/AnalyseButton";
 import ResultsPanel from "@/components/ResultsPanel";
+import { analyseDocuments, type AuditResult } from "@/lib/puter-ai";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [regulationFiles, setRegulationFiles] = useState<UploadedFile[]>([]);
@@ -12,6 +14,10 @@ const Index = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [analysing, setAnalysing] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
+  const [progressMessage, setProgressMessage] = useState("");
+  const [progressPercent, setProgressPercent] = useState(0);
+  const { toast } = useToast();
 
   const addFiles = useCallback(
     (setter: React.Dispatch<React.SetStateAction<UploadedFile[]>>) =>
@@ -39,13 +45,39 @@ const Index = () => {
     );
   };
 
-  const handleAnalyse = () => {
+  const handleAnalyse = async () => {
     setAnalysing(true);
     setShowResults(false);
-    setTimeout(() => {
-      setAnalysing(false);
+    setAuditResult(null);
+
+    try {
+      const categoryNames = selectedCategories.map(
+        (id) => CATEGORIES.find((c) => c.id === id)?.name || id
+      );
+
+      const result = await analyseDocuments(
+        regulationFiles.map((f) => f.file),
+        documentFiles.map((f) => f.file),
+        categoryNames,
+        (msg, pct) => {
+          setProgressMessage(msg);
+          setProgressPercent(pct);
+        }
+      );
+
+      setAuditResult(result);
       setShowResults(true);
-    }, 3000);
+      toast({ title: "Analysis Complete", description: `Found ${result.totalFindings} findings across your documents.` });
+    } catch (error) {
+      console.error("Analysis failed:", error);
+      toast({
+        title: "Analysis Failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setAnalysing(false);
+    }
   };
 
   const canAnalyse = documentFiles.length > 0 && selectedCategories.length > 0;
@@ -113,9 +145,11 @@ const Index = () => {
               disabled={!canAnalyse}
               loading={analysing}
               onClick={handleAnalyse}
+              progressMessage={progressMessage}
+              progressPercent={progressPercent}
             />
           )}
-          <ResultsPanel visible={showResults} />
+          <ResultsPanel visible={showResults} result={auditResult} />
         </StepCard>
       </main>
     </div>

@@ -2,9 +2,11 @@ interface AnalyseButtonProps {
   disabled: boolean;
   loading: boolean;
   onClick: () => void;
+  progressMessage?: string;
+  progressPercent?: number;
 }
 
-const AnalyseButton = ({ disabled, loading, onClick }: AnalyseButtonProps) => {
+const AnalyseButton = ({ disabled, loading, onClick, progressMessage, progressPercent }: AnalyseButtonProps) => {
   return (
     <div>
       <button
@@ -24,11 +26,11 @@ const AnalyseButton = ({ disabled, loading, onClick }: AnalyseButtonProps) => {
 
       {loading && (
         <div className="mt-4">
-          <div className="text-xs text-muted-foreground mb-1.5 font-heading">Processing documents...</div>
+          <div className="text-xs text-muted-foreground mb-1.5 font-heading">{progressMessage || "Processing documents..."}</div>
           <div className="h-1 bg-border rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-primary to-[hsl(220,100%,60%)] rounded-full transition-all duration-500"
-              style={{ width: '60%', animation: 'pulse-dot 1.5s ease-in-out infinite' }}
+              style={{ width: `${progressPercent ?? 60}%` }}
             />
           </div>
         </div>
