@@ -1,179 +1,738 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SA Regulatory Audit Tool — Eagle Vision Services</title>
-    <meta name="description" content="AI-powered South African regulatory compliance audit tool. Upload documents and check against PFMA, POPIA, OHS Act, BCEA, King IV, NEMA, B-BBEE Act and more." />
-    <meta name="author" content="Eagle Vision Services" />
-
-    <!-- Open Graph / Social Media Meta Tags -->
-    <meta property="og:title" content="SA Regulatory Audit Tool — Eagle Vision Services" />
-    <meta property="og:description" content="AI-powered compliance auditing for South African regulations. Upload your documents and get instant compliance analysis." />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://your-domain.com/audit-tool-og-image.png" />
-    <meta property="og:url" content="https://your-domain.com" />
-
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@EagleVisionServices" />
-    <meta name="twitter:title" content="SA Regulatory Audit Tool" />
-    <meta name="twitter:description" content="AI-powered compliance auditing for South African regulations" />
-    <meta name="twitter:image" content="https://your-domain.com/audit-tool-twitter-image.png" />
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-
-    <!-- Preconnect to CDNs -->
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
-    <link rel="preconnect" href="https://cdn.sheetjs.com" />
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-    <link rel="preconnect" href="https://js.puter.com" />
-
-    <!-- Styles -->
-    <link rel="stylesheet" href="/src/index.css" />
-    
-    <!-- Loading indicator styles -->
     <style>
-      .library-loading {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: #1e293b;
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        font-size: 14px;
-        z-index: 9999;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        display: none;
-      }
-      .library-loading.active {
-        display: block;
-      }
-      .library-loading .spinner {
-        display: inline-block;
-        width: 16px;
-        height: 16px;
-        border: 2px solid rgba(255,255,255,0.3);
-        border-radius: 50%;
-        border-top-color: white;
-        animation: spin 1s ease-in-out infinite;
-        margin-right: 8px;
-      }
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px 12px 0 0;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #1e293b;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 0 0 12px 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-bar {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-text {
+            color: #334155;
+            font-weight: 500;
+        }
+
+        .status-success {
+            color: #10b981;
+        }
+
+        .library-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .library-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .library-icon {
+            width: 32px;
+            height: 32px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .library-info {
+            flex: 1;
+        }
+
+        .library-name {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.9em;
+        }
+
+        .library-status {
+            font-size: 0.8em;
+            color: #64748b;
+        }
+
+        .library-status.loaded {
+            color: #10b981;
+        }
+
+        .library-status.error {
+            color: #ef4444;
+        }
+
+        .upload-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .upload-box {
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        .upload-box:hover {
+            border-color: #3b82f6;
+        }
+
+        .upload-box h3 {
+            color: #334155;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .upload-box input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .file-list {
+            max-height: 150px;
+            overflow-y: auto;
+            text-align: left;
+            font-size: 0.9em;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px;
+            background: #f8fafc;
+        }
+
+        .file-item {
+            padding: 5px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #475569;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .categories-section {
+            margin-bottom: 30px;
+        }
+
+        .categories-section h3 {
+            color: #334155;
+            margin-bottom: 15px;
+        }
+
+        .category-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .category-btn {
+            padding: 8px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 20px;
+            background: white;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .category-btn.selected {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .progress-section {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .progress-message {
+            color: #475569;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .results-section {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 30px;
+        }
+
+        .results-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            text-align: center;
+        }
+
+        .summary-card.total { background: #3b82f6; }
+        .summary-card.high { background: #ef4444; }
+        .summary-card.medium { background: #f59e0b; }
+        .summary-card.compliant { background: #10b981; }
+
+        .summary-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .opinion-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .opinion-badge.clean { background: #10b981; color: white; }
+        .opinion-badge.qualified { background: #f59e0b; color: white; }
+        .opinion-badge.adverse { background: #ef4444; color: white; }
+
+        .findings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .finding-item {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .finding-item.high { border-left: 4px solid #ef4444; }
+        .finding-item.medium { border-left: 4px solid #f59e0b; }
+        .finding-item.low { border-left: 4px solid #3b82f6; }
+        .finding-item.compliant { border-left: 4px solid #10b981; }
+
+        .finding-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .finding-title {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .finding-severity {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .finding-severity.high { background: #fee2e2; color: #ef4444; }
+        .finding-severity.medium { background: #fef3c7; color: #f59e0b; }
+        .finding-severity.low { background: #dbeafe; color: #3b82f6; }
+        .finding-severity.compliant { background: #d1fae5; color: #10b981; }
+
+        .finding-regulation {
+            color: #3b82f6;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .finding-description {
+            color: #475569;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .finding-evidence, .finding-recommendation {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .debug-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #1e293b;
+            border-radius: 8px;
+            color: #a5f3fc;
+            font-family: monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+        }
+
+        .debug-title {
+            color: white;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
     </style>
-  </head>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SA Regulatory Audit Tool</h1>
+            <p>AI-powered compliance auditing for South African regulations</p>
+        </div>
 
-  <body>
-    <div id="root"></div>
+        <div class="main-content">
+            <!-- Library Loader Status -->
+            <div class="status-bar" id="loaderStatus">
+                <div class="spinner" id="mainSpinner"></div>
+                <div class="status-text" id="statusMessage">Loading libraries...</div>
+            </div>
 
-    <!-- Library Loading Indicator -->
-    <div id="library-loading" class="library-loading">
-      <span class="spinner"></span>
-      <span id="library-status">Loading libraries...</span>
+            <!-- Library Status Grid -->
+            <div class="library-grid" id="libraryGrid"></div>
+
+            <!-- Debug Output -->
+            <div class="debug-section" id="debugOutput">
+                <div class="debug-title">📋 System Status:</div>
+                <div id="debugContent">Initializing...</div>
+            </div>
+
+            <!-- Main Application (Hidden until libraries load) -->
+            <div id="mainApp" class="hidden">
+                <!-- File Upload Sections -->
+                <div class="upload-section">
+                    <div class="upload-box">
+                        <h3>📜 Regulation Files</h3>
+                        <input type="file" id="regulationFiles" multiple accept=".pdf,.txt,.md,.csv,.docx,.doc,.rtf" />
+                        <div id="regulationFileList" class="file-list">No files selected</div>
+                    </div>
+                    
+                    <div class="upload-box">
+                        <h3>📄 Documents to Audit</h3>
+                        <input type="file" id="documentFiles" multiple accept=".pdf,.txt,.md,.csv,.docx,.doc,.xlsx,.xls,.pptx" />
+                        <div id="documentFileList" class="file-list">No files selected</div>
+                    </div>
+                </div>
+
+                <!-- Categories -->
+                <div class="categories-section">
+                    <h3>🔍 Select Categories to Check</h3>
+                    <div class="category-grid" id="categoryGrid">
+                        <button class="category-btn selected" data-category="PFMA">PFMA</button>
+                        <button class="category-btn selected" data-category="POPIA">POPIA</button>
+                        <button class="category-btn selected" data-category="OHS Act">OHS Act</button>
+                        <button class="category-btn" data-category="BCEA">BCEA</button>
+                        <button class="category-btn" data-category="King IV">King IV</button>
+                        <button class="category-btn" data-category="NEMA">NEMA</button>
+                        <button class="category-btn" data-category="B-BBEE">B-BBEE</button>
+                        <button class="category-btn" data-category="Companies Act">Companies Act</button>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div class="progress-section hidden" id="progressSection">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-message" id="progressMessage"></div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="startAuditBtn" disabled>🚀 Start Audit</button>
+                    <button class="btn btn-secondary" id="resetBtn">🔄 Reset</button>
+                </div>
+
+                <!-- Results -->
+                <div class="results-section hidden" id="resultsSection">
+                    <h3>📊 Audit Results</h3>
+                    <div class="results-summary" id="resultsSummary"></div>
+                    <div id="opinionBadge" class="opinion-badge"></div>
+                    <div id="findingsList" class="findings-list"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Core Libraries (always loaded) -->
+    <!-- Libraries -->
     <script src="https://js.puter.com/v2/"></script>
-    
-    <!-- Dynamic Library Loader -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+
     <script>
-      // Show loading indicator
-      const showLibraryLoading = (message) => {
-        const indicator = document.getElementById('library-loading');
-        const status = document.getElementById('library-status');
-        if (indicator && status) {
-          status.textContent = message;
-          indicator.classList.add('active');
-        }
-      };
+        // Debug logging
+        const debug = {
+            log: function(msg) {
+                const content = document.getElementById('debugContent');
+                if (content) {
+                    content.innerHTML += `\n> ${msg}`;
+                }
+                console.log(msg);
+            },
+            clear: function() {
+                const content = document.getElementById('debugContent');
+                if (content) {
+                    content.innerHTML = '';
+                }
+            }
+        };
 
-      const hideLibraryLoading = () => {
-        const indicator = document.getElementById('library-loading');
-        if (indicator) {
-          indicator.classList.remove('active');
-        }
-      };
+        // Library status tracking
+        const libraries = [
+            { name: 'Puter.ai', global: 'puter', loaded: false },
+            { name: 'PDF.js', global: 'pdfjsLib', loaded: false },
+            { name: 'JSZip', global: 'JSZip', loaded: false },
+            { name: 'SheetJS', global: 'XLSX', loaded: false }
+        ];
 
-      // Dynamic library loader
-      window.loadLibraries = async (types) => {
-        const loaded = {};
-        
-        for (const type of types) {
-          switch(type) {
-            case 'pdf':
-              if (!window.pdfjsLib) {
-                showLibraryLoading('Loading PDF library...');
-                await new Promise((resolve, reject) => {
-                  const script = document.createElement('script');
-                  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js';
-                  script.onload = () => {
-                    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.js';
-                    resolve();
-                  };
-                  script.onerror = reject;
-                  document.head.appendChild(script);
-                });
-              }
-              loaded.pdf = true;
-              break;
-              
-            case 'zip':
-              if (!window.JSZip) {
-                showLibraryLoading('Loading archive library...');
-                await new Promise((resolve, reject) => {
-                  const script = document.createElement('script');
-                  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-                  script.onload = resolve;
-                  script.onerror = reject;
-                  document.head.appendChild(script);
-                });
-              }
-              loaded.zip = true;
-              break;
-              
-            case 'excel':
-              if (!window.XLSX) {
-                showLibraryLoading('Loading Excel library...');
-                await new Promise((resolve, reject) => {
-                  const script = document.createElement('script');
-                  script.src = 'https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js';
-                  script.onload = resolve;
-                  script.onerror = reject;
-                  document.head.appendChild(script);
-                });
-              }
-              loaded.excel = true;
-              break;
-              
-            case 'ocr':
-              if (!window.Tesseract) {
-                showLibraryLoading('Loading OCR library...');
-                await new Promise((resolve, reject) => {
-                  const script = document.createElement('script');
-                  script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-                  script.onload = resolve;
-                  script.onerror = reject;
-                  document.head.appendChild(script);
-                });
-              }
-              loaded.ocr = true;
-              break;
-          }
+        // Update library grid
+        function updateLibraryGrid() {
+            const grid = document.getElementById('libraryGrid');
+            grid.innerHTML = libraries.map(lib => `
+                <div class="library-card">
+                    <div class="library-icon">${lib.loaded ? '✅' : '⏳'}</div>
+                    <div class="library-info">
+                        <div class="library-name">${lib.name}</div>
+                        <div class="library-status ${lib.loaded ? 'loaded' : ''}">${lib.loaded ? 'Loaded' : 'Loading...'}</div>
+                    </div>
+                </div>
+            `).join('');
         }
-        
-        hideLibraryLoading();
-        return loaded;
-      };
 
-      // Pre-load PDF library by default (most common)
-      window.loadLibraries(['pdf']).catch(console.warn);
+        // Check library status
+        function checkLibraries() {
+            let allLoaded = true;
+            
+            libraries.forEach(lib => {
+                const exists = window[lib.global] !== undefined;
+                lib.loaded = exists;
+                if (!exists) allLoaded = false;
+                debug.log(`${lib.name}: ${exists ? '✅ Loaded' : '⏳ Loading...'}`);
+            });
+
+            updateLibraryGrid();
+
+            // Configure PDF.js if loaded
+            if (window.pdfjsLib) {
+                try {
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.js';
+                    debug.log('PDF.js worker configured');
+                } catch (e) {
+                    debug.log('PDF.js config error: ' + e.message);
+                }
+            }
+
+            if (allLoaded) {
+                document.getElementById('loaderStatus').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('startAuditBtn').disabled = false;
+                document.getElementById('statusMessage').textContent = 'All libraries loaded successfully!';
+                debug.log('✅ All libraries loaded - Application ready');
+            } else {
+                setTimeout(checkLibraries, 500); // Check again in 500ms
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', function() {
+            debug.clear();
+            debug.log('Page loaded, checking libraries...');
+            updateLibraryGrid();
+            checkLibraries();
+        });
+
+        // File handling
+        let regulationFiles = [];
+        let documentFiles = [];
+        let selectedCategories = ['PFMA', 'POPIA', 'OHS Act'];
+
+        // File input handlers
+        document.getElementById('regulationFiles').addEventListener('change', function(e) {
+            regulationFiles = Array.from(e.target.files);
+            updateFileList('regulationFileList', regulationFiles);
+        });
+
+        document.getElementById('documentFiles').addEventListener('change', function(e) {
+            documentFiles = Array.from(e.target.files);
+            updateFileList('documentFileList', documentFiles);
+        });
+
+        function updateFileList(elementId, files) {
+            const list = document.getElementById(elementId);
+            if (files.length === 0) {
+                list.innerHTML = 'No files selected';
+            } else {
+                list.innerHTML = files.map(f => 
+                    `<div class="file-item">📄 ${f.name} (${(f.size/1024).toFixed(1)}KB)</div>`
+                ).join('');
+            }
+        }
+
+        // Category handling
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.toggle('selected');
+                selectedCategories = Array.from(document.querySelectorAll('.category-btn.selected'))
+                    .map(b => b.dataset.category);
+                debug.log('Selected categories: ' + selectedCategories.join(', '));
+            });
+        });
+
+        // Reset button
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            regulationFiles = [];
+            documentFiles = [];
+            document.getElementById('regulationFiles').value = '';
+            document.getElementById('documentFiles').value = '';
+            updateFileList('regulationFileList', []);
+            updateFileList('documentFileList', []);
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('progressSection').classList.add('hidden');
+            debug.log('Form reset');
+        });
+
+        // Start audit button
+        document.getElementById('startAuditBtn').addEventListener('click', async function() {
+            if (documentFiles.length === 0) {
+                alert('Please select at least one document to audit');
+                return;
+            }
+
+            if (selectedCategories.length === 0) {
+                alert('Please select at least one category');
+                return;
+            }
+
+            debug.log('Starting audit with:');
+            debug.log(`- Documents: ${documentFiles.length}`);
+            debug.log(`- Regulations: ${regulationFiles.length}`);
+            debug.log(`- Categories: ${selectedCategories.join(', ')}`);
+
+            // Show progress
+            document.getElementById('progressSection').classList.remove('hidden');
+            document.getElementById('resultsSection').classList.add('hidden');
+
+            try {
+                // Call the analysis function
+                const result = await analyseDocuments(
+                    regulationFiles,
+                    documentFiles,
+                    selectedCategories,
+                    (msg, pct) => {
+                        document.getElementById('progressFill').style.width = pct + '%';
+                        document.getElementById('progressMessage').textContent = msg;
+                        debug.log(`Progress [${pct}%]: ${msg}`);
+                    }
+                );
+
+                // Display results
+                displayResults(result);
+                debug.log('✅ Audit complete');
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+                debug.log('❌ Error: ' + error.message);
+                console.error(error);
+            }
+        });
+
+        function displayResults(result) {
+            // Summary cards
+            document.getElementById('resultsSummary').innerHTML = `
+                <div class="summary-card total">
+                    <div class="summary-number">${result.totalFindings || 0}</div>
+                    <div class="summary-label">Total</div>
+                </div>
+                <div class="summary-card high">
+                    <div class="summary-number">${result.highRisk || 0}</div>
+                    <div class="summary-label">High Risk</div>
+                </div>
+                <div class="summary-card medium">
+                    <div class="summary-number">${result.mediumRisk || 0}</div>
+                    <div class="summary-label">Medium Risk</div>
+                </div>
+                <div class="summary-card compliant">
+                    <div class="summary-number">${result.compliant || 0}</div>
+                    <div class="summary-label">Compliant</div>
+                </div>
+            `;
+
+            // Opinion badge
+            const opinionDiv = document.getElementById('opinionBadge');
+            opinionDiv.textContent = `Opinion: ${result.opinion?.toUpperCase() || 'N/A'}`;
+            opinionDiv.className = `opinion-badge ${result.opinion || 'clean'}`;
+
+            // Findings list
+            if (result.findings && result.findings.length > 0) {
+                document.getElementById('findingsList').innerHTML = result.findings.map(f => `
+                    <div class="finding-item ${f.severity}">
+                        <div class="finding-header">
+                            <span class="finding-title">${f.title || 'Untitled'}</span>
+                            <span class="finding-severity ${f.severity}">${f.severity}</span>
+                        </div>
+                        <div class="finding-regulation">📋 ${f.regulation || 'N/A'}</div>
+                        <div class="finding-description">${f.description || 'No description'}</div>
+                        ${f.evidence ? `<div class="finding-evidence"><strong>Evidence:</strong> ${f.evidence}</div>` : ''}
+                        ${f.recommendation ? `<div class="finding-recommendation"><strong>Recommendation:</strong> ${f.recommendation}</div>` : ''}
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('findingsList').innerHTML = '<p>No findings to display</p>';
+            }
+
+            document.getElementById('resultsSection').classList.remove('hidden');
+            document.getElementById('progressSection').classList.add('hidden');
+        }
+
+        // Copy the document analysis code here
+        ${documentAnalysisCode}
     </script>
-
-    <!-- Main Application Script -->
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+</body>
 </html>
