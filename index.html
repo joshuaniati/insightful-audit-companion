@@ -3,26 +3,177 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
     <title>SA Regulatory Audit Tool — Eagle Vision Services</title>
-    <meta name="description" content="AI-powered SA regulatory compliance audit tool. Upload documents and check against PFMA, POPIA, OHS Act and more." />
-    <meta name="author" content="Lovable" />
+    <meta name="description" content="AI-powered South African regulatory compliance audit tool. Upload documents and check against PFMA, POPIA, OHS Act, BCEA, King IV, NEMA, B-BBEE Act and more." />
+    <meta name="author" content="Eagle Vision Services" />
 
-    <!-- TODO: Update og:title to match your application name -->
-    <meta property="og:title" content="Lovable App" />
-    <meta property="og:description" content="Lovable Generated Project" />
+    <!-- Open Graph / Social Media Meta Tags -->
+    <meta property="og:title" content="SA Regulatory Audit Tool — Eagle Vision Services" />
+    <meta property="og:description" content="AI-powered compliance auditing for South African regulations. Upload your documents and get instant compliance analysis." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:image" content="https://your-domain.com/audit-tool-og-image.png" />
+    <meta property="og:url" content="https://your-domain.com" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:site" content="@EagleVisionServices" />
+    <meta name="twitter:title" content="SA Regulatory Audit Tool" />
+    <meta name="twitter:description" content="AI-powered compliance auditing for South African regulations" />
+    <meta name="twitter:image" content="https://your-domain.com/audit-tool-twitter-image.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Preconnect to CDNs -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+    <link rel="preconnect" href="https://cdn.sheetjs.com" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="preconnect" href="https://js.puter.com" />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/src/index.css" />
+    
+    <!-- Loading indicator styles -->
+    <style>
+      .library-loading {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #1e293b;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        z-index: 9999;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        display: none;
+      }
+      .library-loading.active {
+        display: block;
+      }
+      .library-loading .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+        margin-right: 8px;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
   </head>
 
   <body>
     <div id="root"></div>
+
+    <!-- Library Loading Indicator -->
+    <div id="library-loading" class="library-loading">
+      <span class="spinner"></span>
+      <span id="library-status">Loading libraries...</span>
+    </div>
+
+    <!-- Core Libraries (always loaded) -->
     <script src="https://js.puter.com/v2/"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+    
+    <!-- Dynamic Library Loader -->
+    <script>
+      // Show loading indicator
+      const showLibraryLoading = (message) => {
+        const indicator = document.getElementById('library-loading');
+        const status = document.getElementById('library-status');
+        if (indicator && status) {
+          status.textContent = message;
+          indicator.classList.add('active');
+        }
+      };
+
+      const hideLibraryLoading = () => {
+        const indicator = document.getElementById('library-loading');
+        if (indicator) {
+          indicator.classList.remove('active');
+        }
+      };
+
+      // Dynamic library loader
+      window.loadLibraries = async (types) => {
+        const loaded = {};
+        
+        for (const type of types) {
+          switch(type) {
+            case 'pdf':
+              if (!window.pdfjsLib) {
+                showLibraryLoading('Loading PDF library...');
+                await new Promise((resolve, reject) => {
+                  const script = document.createElement('script');
+                  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js';
+                  script.onload = () => {
+                    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.js';
+                    resolve();
+                  };
+                  script.onerror = reject;
+                  document.head.appendChild(script);
+                });
+              }
+              loaded.pdf = true;
+              break;
+              
+            case 'zip':
+              if (!window.JSZip) {
+                showLibraryLoading('Loading archive library...');
+                await new Promise((resolve, reject) => {
+                  const script = document.createElement('script');
+                  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+                  script.onload = resolve;
+                  script.onerror = reject;
+                  document.head.appendChild(script);
+                });
+              }
+              loaded.zip = true;
+              break;
+              
+            case 'excel':
+              if (!window.XLSX) {
+                showLibraryLoading('Loading Excel library...');
+                await new Promise((resolve, reject) => {
+                  const script = document.createElement('script');
+                  script.src = 'https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js';
+                  script.onload = resolve;
+                  script.onerror = reject;
+                  document.head.appendChild(script);
+                });
+              }
+              loaded.excel = true;
+              break;
+              
+            case 'ocr':
+              if (!window.Tesseract) {
+                showLibraryLoading('Loading OCR library...');
+                await new Promise((resolve, reject) => {
+                  const script = document.createElement('script');
+                  script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+                  script.onload = resolve;
+                  script.onerror = reject;
+                  document.head.appendChild(script);
+                });
+              }
+              loaded.ocr = true;
+              break;
+          }
+        }
+        
+        hideLibraryLoading();
+        return loaded;
+      };
+
+      // Pre-load PDF library by default (most common)
+      window.loadLibraries(['pdf']).catch(console.warn);
+    </script>
+
+    <!-- Main Application Script -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
