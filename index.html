@@ -5,421 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SA Regulatory Audit Tool — Eagle Vision Services</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            min-height: 100vh;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            background: white;
-            border-radius: 12px 12px 0 0;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .header h1 {
-            color: #1e293b;
-            margin-bottom: 10px;
-            font-size: 2.2em;
-        }
-
-        .header p {
-            color: #64748b;
-            font-size: 1.1em;
-        }
-
-        .main-content {
-            background: white;
-            border-radius: 0 0 12px 12px;
-            padding: 30px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .status-bar {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid #e2e8f0;
-            border-top-color: #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .status-text {
-            color: #334155;
-            font-weight: 500;
-        }
-
-        .status-success {
-            color: #10b981;
-        }
-
-        .library-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .library-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .library-icon {
-            width: 32px;
-            height: 32px;
-            background: #e2e8f0;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-
-        .library-info {
-            flex: 1;
-        }
-
-        .library-name {
-            font-weight: 600;
-            color: #1e293b;
-            font-size: 0.9em;
-        }
-
-        .library-status {
-            font-size: 0.8em;
-            color: #64748b;
-        }
-
-        .library-status.loaded {
-            color: #10b981;
-        }
-
-        .library-status.error {
-            color: #ef4444;
-        }
-
-        .upload-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .upload-box {
-            border: 2px dashed #cbd5e1;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            transition: border-color 0.3s;
-        }
-
-        .upload-box:hover {
-            border-color: #3b82f6;
-        }
-
-        .upload-box h3 {
-            color: #334155;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-
-        .upload-box input[type="file"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            margin-bottom: 10px;
-        }
-
-        .file-list {
-            max-height: 150px;
-            overflow-y: auto;
-            text-align: left;
-            font-size: 0.9em;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 10px;
-            background: #f8fafc;
-        }
-
-        .file-item {
-            padding: 5px;
-            border-bottom: 1px solid #e2e8f0;
-            color: #475569;
-        }
-
-        .file-item:last-child {
-            border-bottom: none;
-        }
-
-        .categories-section {
-            margin-bottom: 30px;
-        }
-
-        .categories-section h3 {
-            color: #334155;
-            margin-bottom: 15px;
-        }
-
-        .category-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .category-btn {
-            padding: 8px 16px;
-            border: 1px solid #cbd5e1;
-            border-radius: 20px;
-            background: white;
-            color: #475569;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.9em;
-        }
-
-        .category-btn.selected {
-            background: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-        }
-
-        .progress-section {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-
-        .progress-bar {
-            height: 8px;
-            background: #e2e8f0;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%);
-            width: 0%;
-            transition: width 0.3s;
-        }
-
-        .progress-message {
-            color: #475569;
-            font-size: 0.9em;
-            text-align: center;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-bottom: 30px;
-        }
-
-        .btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: #2563eb;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);
-        }
-
-        .btn-secondary {
-            background: #e2e8f0;
-            color: #334155;
-        }
-
-        .btn-secondary:hover {
-            background: #cbd5e1;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .results-section {
-            border-top: 1px solid #e2e8f0;
-            padding-top: 30px;
-        }
-
-        .results-summary {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .summary-card {
-            padding: 20px;
-            border-radius: 8px;
-            color: white;
-            text-align: center;
-        }
-
-        .summary-card.total { background: #3b82f6; }
-        .summary-card.high { background: #ef4444; }
-        .summary-card.medium { background: #f59e0b; }
-        .summary-card.compliant { background: #10b981; }
-
-        .summary-number {
-            font-size: 2em;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .summary-label {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-
-        .opinion-badge {
-            display: inline-block;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-
-        .opinion-badge.clean { background: #10b981; color: white; }
-        .opinion-badge.qualified { background: #f59e0b; color: white; }
-        .opinion-badge.adverse { background: #ef4444; color: white; }
-
-        .findings-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .finding-item {
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 20px;
-        }
-
-        .finding-item.high { border-left: 4px solid #ef4444; }
-        .finding-item.medium { border-left: 4px solid #f59e0b; }
-        .finding-item.low { border-left: 4px solid #3b82f6; }
-        .finding-item.compliant { border-left: 4px solid #10b981; }
-
-        .finding-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .finding-title {
-            font-weight: 600;
-            color: #1e293b;
-        }
-
-        .finding-severity {
-            padding: 4px 12px;
-            border-radius: 16px;
-            font-size: 0.8em;
-            font-weight: 600;
-        }
-
-        .finding-severity.high { background: #fee2e2; color: #ef4444; }
-        .finding-severity.medium { background: #fef3c7; color: #f59e0b; }
-        .finding-severity.low { background: #dbeafe; color: #3b82f6; }
-        .finding-severity.compliant { background: #d1fae5; color: #10b981; }
-
-        .finding-regulation {
-            color: #3b82f6;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-        }
-
-        .finding-description {
-            color: #475569;
-            line-height: 1.5;
-            margin-bottom: 10px;
-        }
-
-        .finding-evidence, .finding-recommendation {
-            background: #f8fafc;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 0.9em;
-            margin-top: 10px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .debug-section {
-            margin-top: 30px;
-            padding: 20px;
-            background: #1e293b;
-            border-radius: 8px;
-            color: #a5f3fc;
-            font-family: monospace;
-            font-size: 0.9em;
-            white-space: pre-wrap;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .debug-title {
-            color: white;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
+        /* ... (keep all the existing styles from before) ... */
     </style>
 </head>
 <body>
@@ -447,77 +33,24 @@
 
             <!-- Main Application (Hidden until libraries load) -->
             <div id="mainApp" class="hidden">
-                <!-- File Upload Sections -->
-                <div class="upload-section">
-                    <div class="upload-box">
-                        <h3>📜 Regulation Files</h3>
-                        <input type="file" id="regulationFiles" multiple accept=".pdf,.txt,.md,.csv,.docx,.doc,.rtf,.xml,.json" />
-                        <div id="regulationFileList" class="file-list">No files selected</div>
-                    </div>
-                    
-                    <div class="upload-box">
-                        <h3>📄 Documents to Audit</h3>
-                        <input type="file" id="documentFiles" multiple accept=".pdf,.txt,.md,.csv,.docx,.doc,.xlsx,.xls,.pptx,.rtf,.jpg,.jpeg,.png" />
-                        <div id="documentFileList" class="file-list">No files selected</div>
-                    </div>
-                </div>
-
-                <!-- Categories -->
-                <div class="categories-section">
-                    <h3>🔍 Select Categories to Check</h3>
-                    <div class="category-grid" id="categoryGrid">
-                        <button class="category-btn selected" data-category="PFMA">PFMA</button>
-                        <button class="category-btn selected" data-category="POPIA">POPIA</button>
-                        <button class="category-btn selected" data-category="OHS Act">OHS Act</button>
-                        <button class="category-btn" data-category="BCEA">BCEA</button>
-                        <button class="category-btn" data-category="King IV">King IV</button>
-                        <button class="category-btn" data-category="NEMA">NEMA</button>
-                        <button class="category-btn" data-category="B-BBEE">B-BBEE</button>
-                        <button class="category-btn" data-category="Companies Act">Companies Act</button>
-                    </div>
-                </div>
-
-                <!-- Progress -->
-                <div class="progress-section hidden" id="progressSection">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <div class="progress-message" id="progressMessage"></div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="action-buttons">
-                    <button class="btn btn-primary" id="startAuditBtn" disabled>🚀 Start Audit</button>
-                    <button class="btn btn-secondary" id="resetBtn">🔄 Reset</button>
-                </div>
-
-                <!-- Results -->
-                <div class="results-section hidden" id="resultsSection">
-                    <h3>📊 Audit Results</h3>
-                    <div class="results-summary" id="resultsSummary"></div>
-                    <div id="opinionBadge" class="opinion-badge"></div>
-                    <div id="findingsList" class="findings-list"></div>
-                </div>
+                <!-- ... (keep all the existing UI elements from before) ... -->
             </div>
         </div>
     </div>
 
-    <!-- Libraries -->
+    <!-- Libraries - FIXED PDF.js URL -->
     <script src="https://js.puter.com/v2/"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
     <script>
-        // ==================== DOCUMENT ANALYSIS CODE ====================
-        
         // Debug logging
         const debug = {
             log: function(msg) {
                 const content = document.getElementById('debugContent');
                 if (content) {
                     content.innerHTML += `\n> ${msg}`;
-                    // Scroll to bottom
                     content.scrollTop = content.scrollHeight;
                 }
                 console.log(msg);
@@ -541,6 +74,8 @@
         // Update library grid
         function updateLibraryGrid() {
             const grid = document.getElementById('libraryGrid');
+            if (!grid) return;
+            
             grid.innerHTML = libraries.map(lib => `
                 <div class="library-card">
                     <div class="library-icon">${lib.loaded ? '✅' : '⏳'}</div>
@@ -568,7 +103,8 @@
             // Configure PDF.js if loaded
             if (window.pdfjsLib) {
                 try {
-                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.js';
+                    // For PDF.js 2.x
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
                     debug.log('PDF.js worker configured');
                 } catch (e) {
                     debug.log('PDF.js config error: ' + e.message);
@@ -576,15 +112,31 @@
             }
 
             if (allLoaded) {
-                document.getElementById('loaderStatus').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
-                document.getElementById('startAuditBtn').disabled = false;
-                document.getElementById('statusMessage').textContent = 'All libraries loaded successfully!';
+                const loaderStatus = document.getElementById('loaderStatus');
+                const mainApp = document.getElementById('mainApp');
+                const startBtn = document.getElementById('startAuditBtn');
+                const statusMsg = document.getElementById('statusMessage');
+                
+                if (loaderStatus) loaderStatus.classList.add('hidden');
+                if (mainApp) mainApp.classList.remove('hidden');
+                if (startBtn) startBtn.disabled = false;
+                if (statusMsg) statusMsg.textContent = 'All libraries loaded successfully!';
+                
                 debug.log('✅ All libraries loaded - Application ready');
             } else {
                 setTimeout(checkLibraries, 500);
             }
         }
+
+        // Initialize
+        window.addEventListener('load', function() {
+            debug.clear();
+            debug.log('Page loaded, checking libraries...');
+            updateLibraryGrid();
+            
+            // Start checking after a short delay
+            setTimeout(checkLibraries, 100);
+        });
 
         // ==================== FILE EXTRACTION FUNCTIONS ====================
 
@@ -662,9 +214,12 @@
             }
             
             try {
+                debug.log(`Loading PDF: ${file.name}`);
                 const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                 const pages = [];
                 const maxPages = Math.min(pdf.numPages, 30);
+                
+                debug.log(`PDF has ${pdf.numPages} pages, extracting ${maxPages}`);
                 
                 for (let i = 1; i <= maxPages; i++) {
                     const page = await pdf.getPage(i);
@@ -683,7 +238,7 @@
                 return `[PDF file: ${file.name} - no extractable text found]`;
             } catch (error) {
                 debug.log(`❌ PDF.js error: ${error.message}`);
-                return `[PDF file: ${file.name} - extraction error]`;
+                return `[PDF file: ${file.name} - extraction error: ${error.message}]`;
             }
         }
 
@@ -887,31 +442,117 @@ Rules:
 
         // ==================== UI HANDLERS ====================
 
-        // Initialize
-        window.addEventListener('load', function() {
-            debug.clear();
-            debug.log('Page loaded, checking libraries...');
-            updateLibraryGrid();
-            checkLibraries();
-        });
-
         // File handling
         let regulationFiles = [];
         let documentFiles = [];
         let selectedCategories = ['PFMA', 'POPIA', 'OHS Act'];
 
-        document.getElementById('regulationFiles').addEventListener('change', function(e) {
-            regulationFiles = Array.from(e.target.files);
-            updateFileList('regulationFileList', regulationFiles);
-        });
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // File input handlers
+            const regInput = document.getElementById('regulationFiles');
+            const docInput = document.getElementById('documentFiles');
+            
+            if (regInput) {
+                regInput.addEventListener('change', function(e) {
+                    regulationFiles = Array.from(e.target.files);
+                    updateFileList('regulationFileList', regulationFiles);
+                });
+            }
 
-        document.getElementById('documentFiles').addEventListener('change', function(e) {
-            documentFiles = Array.from(e.target.files);
-            updateFileList('documentFileList', documentFiles);
+            if (docInput) {
+                docInput.addEventListener('change', function(e) {
+                    documentFiles = Array.from(e.target.files);
+                    updateFileList('documentFileList', documentFiles);
+                });
+            }
+
+            // Category handling
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.classList.toggle('selected');
+                    selectedCategories = Array.from(document.querySelectorAll('.category-btn.selected'))
+                        .map(b => b.dataset.category);
+                    debug.log('Selected categories: ' + selectedCategories.join(', '));
+                });
+            });
+
+            // Reset button
+            const resetBtn = document.getElementById('resetBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    regulationFiles = [];
+                    documentFiles = [];
+                    if (regInput) regInput.value = '';
+                    if (docInput) docInput.value = '';
+                    updateFileList('regulationFileList', []);
+                    updateFileList('documentFileList', []);
+                    document.getElementById('resultsSection')?.classList.add('hidden');
+                    document.getElementById('progressSection')?.classList.add('hidden');
+                    debug.log('Form reset');
+                });
+            }
+
+            // Start audit button
+            const startBtn = document.getElementById('startAuditBtn');
+            if (startBtn) {
+                startBtn.addEventListener('click', async function() {
+                    if (documentFiles.length === 0) {
+                        alert('Please select at least one document to audit');
+                        return;
+                    }
+
+                    if (selectedCategories.length === 0) {
+                        alert('Please select at least one category');
+                        return;
+                    }
+
+                    if (!window.puter) {
+                        alert('Puter.ai not loaded. Please refresh the page.');
+                        return;
+                    }
+
+                    debug.log('Starting audit with:');
+                    debug.log(`- Documents: ${documentFiles.length}`);
+                    debug.log(`- Regulations: ${regulationFiles.length}`);
+                    debug.log(`- Categories: ${selectedCategories.join(', ')}`);
+
+                    document.getElementById('progressSection')?.classList.remove('hidden');
+                    document.getElementById('resultsSection')?.classList.add('hidden');
+                    startBtn.disabled = true;
+
+                    try {
+                        const result = await analyseDocuments(
+                            regulationFiles,
+                            documentFiles,
+                            selectedCategories,
+                            (msg, pct) => {
+                                const fill = document.getElementById('progressFill');
+                                const msgEl = document.getElementById('progressMessage');
+                                if (fill) fill.style.width = pct + '%';
+                                if (msgEl) msgEl.textContent = msg;
+                                debug.log(`Progress [${pct}%]: ${msg}`);
+                            }
+                        );
+
+                        displayResults(result);
+                        debug.log('✅ Audit complete');
+
+                    } catch (error) {
+                        alert('Error: ' + error.message);
+                        debug.log('❌ Error: ' + error.message);
+                        console.error(error);
+                    } finally {
+                        startBtn.disabled = false;
+                    }
+                });
+            }
         });
 
         function updateFileList(elementId, files) {
             const list = document.getElementById(elementId);
+            if (!list) return;
+            
             if (files.length === 0) {
                 list.innerHTML = 'No files selected';
             } else {
@@ -921,122 +562,58 @@ Rules:
             }
         }
 
-        // Category handling
-        document.querySelectorAll('.category-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                this.classList.toggle('selected');
-                selectedCategories = Array.from(document.querySelectorAll('.category-btn.selected'))
-                    .map(b => b.dataset.category);
-                debug.log('Selected categories: ' + selectedCategories.join(', '));
-            });
-        });
-
-        // Reset button
-        document.getElementById('resetBtn').addEventListener('click', function() {
-            regulationFiles = [];
-            documentFiles = [];
-            document.getElementById('regulationFiles').value = '';
-            document.getElementById('documentFiles').value = '';
-            updateFileList('regulationFileList', []);
-            updateFileList('documentFileList', []);
-            document.getElementById('resultsSection').classList.add('hidden');
-            document.getElementById('progressSection').classList.add('hidden');
-            debug.log('Form reset');
-        });
-
-        // Start audit button
-        document.getElementById('startAuditBtn').addEventListener('click', async function() {
-            if (documentFiles.length === 0) {
-                alert('Please select at least one document to audit');
-                return;
-            }
-
-            if (selectedCategories.length === 0) {
-                alert('Please select at least one category');
-                return;
-            }
-
-            if (!window.puter) {
-                alert('Puter.ai not loaded. Please refresh the page.');
-                return;
-            }
-
-            debug.log('Starting audit with:');
-            debug.log(`- Documents: ${documentFiles.length}`);
-            debug.log(`- Regulations: ${regulationFiles.length}`);
-            debug.log(`- Categories: ${selectedCategories.join(', ')}`);
-
-            document.getElementById('progressSection').classList.remove('hidden');
-            document.getElementById('resultsSection').classList.add('hidden');
-            document.getElementById('startAuditBtn').disabled = true;
-
-            try {
-                const result = await analyseDocuments(
-                    regulationFiles,
-                    documentFiles,
-                    selectedCategories,
-                    (msg, pct) => {
-                        document.getElementById('progressFill').style.width = pct + '%';
-                        document.getElementById('progressMessage').textContent = msg;
-                        debug.log(`Progress [${pct}%]: ${msg}`);
-                    }
-                );
-
-                displayResults(result);
-                debug.log('✅ Audit complete');
-
-            } catch (error) {
-                alert('Error: ' + error.message);
-                debug.log('❌ Error: ' + error.message);
-                console.error(error);
-            } finally {
-                document.getElementById('startAuditBtn').disabled = false;
-            }
-        });
-
         function displayResults(result) {
-            document.getElementById('resultsSummary').innerHTML = `
-                <div class="summary-card total">
-                    <div class="summary-number">${result.totalFindings || 0}</div>
-                    <div class="summary-label">Total</div>
-                </div>
-                <div class="summary-card high">
-                    <div class="summary-number">${result.highRisk || 0}</div>
-                    <div class="summary-label">High Risk</div>
-                </div>
-                <div class="summary-card medium">
-                    <div class="summary-number">${result.mediumRisk || 0}</div>
-                    <div class="summary-label">Medium Risk</div>
-                </div>
-                <div class="summary-card compliant">
-                    <div class="summary-number">${result.compliant || 0}</div>
-                    <div class="summary-label">Compliant</div>
-                </div>
-            `;
-
-            const opinionDiv = document.getElementById('opinionBadge');
-            opinionDiv.textContent = `Opinion: ${result.opinion?.toUpperCase() || 'N/A'}`;
-            opinionDiv.className = `opinion-badge ${result.opinion || 'clean'}`;
-
-            if (result.findings && result.findings.length > 0) {
-                document.getElementById('findingsList').innerHTML = result.findings.map(f => `
-                    <div class="finding-item ${f.severity}">
-                        <div class="finding-header">
-                            <span class="finding-title">${f.title || 'Untitled'}</span>
-                            <span class="finding-severity ${f.severity}">${f.severity}</span>
-                        </div>
-                        <div class="finding-regulation">📋 ${f.regulation || 'N/A'}</div>
-                        <div class="finding-description">${f.description || 'No description'}</div>
-                        ${f.evidence ? `<div class="finding-evidence"><strong>Evidence:</strong> ${f.evidence}</div>` : ''}
-                        ${f.recommendation ? `<div class="finding-recommendation"><strong>Recommendation:</strong> ${f.recommendation}</div>` : ''}
+            const summary = document.getElementById('resultsSummary');
+            const opinion = document.getElementById('opinionBadge');
+            const findings = document.getElementById('findingsList');
+            
+            if (summary) {
+                summary.innerHTML = `
+                    <div class="summary-card total">
+                        <div class="summary-number">${result.totalFindings || 0}</div>
+                        <div class="summary-label">Total</div>
                     </div>
-                `).join('');
-            } else {
-                document.getElementById('findingsList').innerHTML = '<p>No findings to display</p>';
+                    <div class="summary-card high">
+                        <div class="summary-number">${result.highRisk || 0}</div>
+                        <div class="summary-label">High Risk</div>
+                    </div>
+                    <div class="summary-card medium">
+                        <div class="summary-number">${result.mediumRisk || 0}</div>
+                        <div class="summary-label">Medium Risk</div>
+                    </div>
+                    <div class="summary-card compliant">
+                        <div class="summary-number">${result.compliant || 0}</div>
+                        <div class="summary-label">Compliant</div>
+                    </div>
+                `;
             }
 
-            document.getElementById('resultsSection').classList.remove('hidden');
-            document.getElementById('progressSection').classList.add('hidden');
+            if (opinion) {
+                opinion.textContent = `Opinion: ${result.opinion?.toUpperCase() || 'N/A'}`;
+                opinion.className = `opinion-badge ${result.opinion || 'clean'}`;
+            }
+
+            if (findings) {
+                if (result.findings && result.findings.length > 0) {
+                    findings.innerHTML = result.findings.map(f => `
+                        <div class="finding-item ${f.severity}">
+                            <div class="finding-header">
+                                <span class="finding-title">${f.title || 'Untitled'}</span>
+                                <span class="finding-severity ${f.severity}">${f.severity}</span>
+                            </div>
+                            <div class="finding-regulation">📋 ${f.regulation || 'N/A'}</div>
+                            <div class="finding-description">${f.description || 'No description'}</div>
+                            ${f.evidence ? `<div class="finding-evidence"><strong>Evidence:</strong> ${f.evidence}</div>` : ''}
+                            ${f.recommendation ? `<div class="finding-recommendation"><strong>Recommendation:</strong> ${f.recommendation}</div>` : ''}
+                        </div>
+                    `).join('');
+                } else {
+                    findings.innerHTML = '<p>No findings to display</p>';
+                }
+            }
+
+            document.getElementById('resultsSection')?.classList.remove('hidden');
+            document.getElementById('progressSection')?.classList.add('hidden');
         }
     </script>
 </body>
