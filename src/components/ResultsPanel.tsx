@@ -1,4 +1,5 @@
 import type { AuditResult, AuditFinding } from "@/lib/puter-ai";
+import { exportAuditReport } from "@/lib/pdf-export";
 
 const ResultsPanel = ({ visible, result }: { visible: boolean; result?: AuditResult | null }) => {
   if (!visible || !result) return null;
@@ -33,6 +34,14 @@ const ResultsPanel = ({ visible, result }: { visible: boolean; result?: AuditRes
 
   return (
     <div className="mt-0">
+      {/* Export Button */}
+      <button
+        onClick={() => exportAuditReport(r)}
+        className="w-full mb-5 py-3 bg-accent/15 border border-accent/40 text-accent rounded-xl font-heading text-sm font-bold tracking-widest cursor-pointer transition-all flex items-center justify-center gap-2.5 hover:bg-accent/25 hover:border-accent/60"
+      >
+        📥 DOWNLOAD PDF REPORT
+      </button>
+
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         {[
