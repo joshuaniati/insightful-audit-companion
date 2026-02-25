@@ -61,7 +61,12 @@ const FileUploadZone = ({ label, sublabel, files, onAdd, onRemove, accept }: Fil
         multiple
         accept={accept || ".pdf,.docx,.doc,.txt,.csv,.md,.xlsx,.xls,.pptx,.ppt,.rtf,.json,.xml,.yaml,.yml,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp,.zip"}
         className="hidden"
-        onChange={(e) => e.target.files && onAdd(e.target.files)}
+        onChange={(e) => {
+          if (e.target.files) {
+            onAdd(e.target.files);
+            e.target.value = "";
+          }
+        }}
       />
 
       {files.length > 0 && (
