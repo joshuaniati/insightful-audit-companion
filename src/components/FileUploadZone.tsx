@@ -52,14 +52,14 @@ const FileUploadZone = ({ label, sublabel, files, onAdd, onRemove, accept }: Fil
       >
         <div className="text-2xl mb-2">📤</div>
         <p className="text-sm text-muted-foreground">
-          Click or drag <span className="text-primary font-medium">PDFs, images, or text files</span> here
+          Click or drag <span className="text-primary font-medium">PDFs, Office docs, images, or text files</span> here
         </p>
       </div>
       <input
         ref={inputRef}
         type="file"
         multiple
-        accept={accept || ".pdf,.docx,.txt,.csv,.md"}
+        accept={accept || ".pdf,.docx,.doc,.txt,.csv,.md,.xlsx,.xls,.pptx,.ppt,.rtf,.json,.xml,.yaml,.yml,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp,.zip"}
         className="hidden"
         onChange={(e) => e.target.files && onAdd(e.target.files)}
       />
